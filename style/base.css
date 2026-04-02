@@ -297,6 +297,39 @@
   background: var(--jp-layout-color2);
 }
 
+/* Breadcrumb Navigation */
+.ve-breadcrumb {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--jp-layout-color1);
+  border-bottom: 1px solid var(--jp-border-color2);
+  font-size: var(--jp-ui-font-size1);
+  flex-shrink: 0;
+  min-height: 26px;
+}
+
+.ve-breadcrumb-link {
+  color: var(--jp-brand-color1);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ve-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.ve-breadcrumb-sep {
+  margin: 0 6px;
+  color: var(--jp-ui-font-color2);
+  font-size: 14px;
+}
+
+.ve-breadcrumb-current {
+  font-weight: 600;
+  color: var(--jp-ui-font-color0);
+}
+
 /* Cell Reference Bar */
 .ve-cell-reference-bar {
   display: flex;

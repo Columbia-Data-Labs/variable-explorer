@@ -118,6 +118,33 @@ class CommManager {
 
 /***/ },
 
+/***/ "./lib/components/Breadcrumb.js"
+/*!**************************************!*\
+  !*** ./lib/components/Breadcrumb.js ***!
+  \**************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Breadcrumb: () => (/* binding */ Breadcrumb)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "webpack/sharing/consume/default/react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+
+const Breadcrumb = ({ path, onNavigate }) => {
+    if (path.length <= 1)
+        return null;
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-breadcrumb" }, path.map((item, i) => {
+        const isLast = i === path.length - 1;
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, { key: i },
+            i > 0 && react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", { className: "ve-breadcrumb-sep" }, "\u203A"),
+            isLast ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", { className: "ve-breadcrumb-current" }, item.label)) : (react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", { className: "ve-breadcrumb-link", onClick: () => onNavigate(i), title: `Go back to ${item.label}` }, item.label))));
+    })));
+};
+
+
+/***/ },
+
 /***/ "./lib/components/CellReferenceBar.js"
 /*!********************************************!*\
   !*** ./lib/components/CellReferenceBar.js ***!
@@ -164,7 +191,44 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColumns, loading, onSortChanged, onLoadMore, onCellSelected, onCellEdit }) => {
+const IndexHeader = ({ onIndexSort, sortModel }) => {
+    // Check if there's an active index sort
+    const indexSort = sortModel.find(s => s.colId === '__index__');
+    const currentDir = (indexSort === null || indexSort === void 0 ? void 0 : indexSort.sort) || null;
+    // If other columns are sorted but not index, show no arrow
+    const hasOtherSorts = sortModel.some(s => s.colId !== '__index__');
+    const handleClick = () => {
+        if (currentDir === null || hasOtherSorts) {
+            // No index sort or other sorts active → go to ascending (original order, clear other sorts)
+            onIndexSort('asc');
+        }
+        else if (currentDir === 'asc') {
+            onIndexSort('desc');
+        }
+        else {
+            onIndexSort('asc');
+        }
+    };
+    const arrow = currentDir === 'asc' ? ' \u25b2' : currentDir === 'desc' ? ' \u25bc' : '';
+    const tooltip = currentDir === 'desc'
+        ? 'Click to sort index ascending (original order)'
+        : currentDir === 'asc'
+            ? 'Click to reverse index order'
+            : 'Click to reset to original index order';
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { onClick: handleClick, title: tooltip, style: {
+            cursor: 'pointer',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 600,
+            fontSize: '12px',
+        } },
+        "Index",
+        arrow));
+};
+const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColumns, loading, isContainerView, onSortChanged, onLoadMore, onCellSelected, onCellEdit, onDrillDown }) => {
     const gridRef = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
     // Build a stats lookup map
     const statsMap = react__WEBPACK_IMPORTED_MODULE_0__.useMemo(() => {
@@ -178,16 +242,28 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
     const colDefs = react__WEBPACK_IMPORTED_MODULE_0__.useMemo(() => {
         // Row index column
         const indexCol = {
-            headerName: '#',
+            headerName: 'Index',
             colId: '__index__',
-            valueGetter: (params) => {
-                var _a;
-                return ((_a = params.node) === null || _a === void 0 ? void 0 : _a.rowIndex) != null ? params.node.rowIndex : '';
+            field: '__pandas_index__',
+            headerComponent: IndexHeader,
+            headerComponentParams: {
+                sortModel,
+                onIndexSort: (direction) => {
+                    var _a, _b;
+                    // Clear AG Grid's visual sort state
+                    (_b = (_a = gridRef.current) === null || _a === void 0 ? void 0 : _a.api) === null || _b === void 0 ? void 0 : _b.applyColumnState({ defaultState: { sort: null } });
+                    if (direction) {
+                        onSortChanged([{ colId: '__index__', sort: direction }]);
+                    }
+                    else {
+                        onSortChanged([]);
+                    }
+                }
             },
-            width: 70,
+            width: 80,
             pinned: 'left',
-            sortable: true,
-            resizable: false,
+            sortable: false,
+            resizable: true,
             cellStyle: {
                 color: 'var(--jp-ui-font-color2)',
                 fontWeight: '500',
@@ -258,19 +334,33 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
             }
             return def;
         });
+        // Add a drill-down column for container views
+        if (isContainerView && onDrillDown) {
+            const drillCol = {
+                headerName: '',
+                colId: '__drill__',
+                width: 50,
+                sortable: false,
+                resizable: false,
+                cellRenderer: () => {
+                    return '\u25b6';
+                },
+                cellStyle: {
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    color: 'var(--jp-brand-color1)',
+                }
+            };
+            return [indexCol, ...dataCols, drillCol];
+        }
         return [indexCol, ...dataCols];
-    }, [columns, statsMap, hiddenColumns]);
+    }, [columns, statsMap, hiddenColumns, isContainerView, onDrillDown, onSortChanged]);
     // Handle sort
     const handleSortChanged = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((event) => {
         const colState = event.api.getColumnState();
-        const sorted = colState.filter((c) => c.sort);
-        // If the index column (#) is being sorted, clear all sorts → reset to original order
-        if (sorted.some((c) => c.colId === '__index__')) {
-            event.api.applyColumnState({ defaultState: { sort: null } });
-            onSortChanged([]);
-            return;
-        }
-        const newSortModel = sorted
+        const newSortModel = colState
+            .filter((c) => c.sort && c.colId !== '__index__')
             .sort((a, b) => (a.sortIndex || 0) - (b.sortIndex || 0))
             .map((c) => ({
             colId: c.colId,
@@ -280,10 +370,20 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
     }, [onSortChanged]);
     // Handle cell click
     const handleCellClicked = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((event) => {
+        var _a, _b;
+        // Drill-down: clicking the ▶ column or double-clicking a row in container view
+        if (isContainerView && onDrillDown && event.colDef.colId === '__drill__') {
+            const data = event.data;
+            // Use 'index' or 'key' field from the summary row
+            const key = String((_b = (_a = data === null || data === void 0 ? void 0 : data.index) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.key) !== null && _b !== void 0 ? _b : event.rowIndex);
+            const label = `[${key}]`;
+            onDrillDown(key, label);
+            return;
+        }
         if (event.colDef.field && event.rowIndex != null) {
             onCellSelected(event.rowIndex, event.colDef.field, event.value);
         }
-    }, [onCellSelected]);
+    }, [onCellSelected, isContainerView, onDrillDown]);
     // Handle cell edit
     const handleCellEditRequest = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((event) => {
         if (event.colDef.field && event.rowIndex != null) {
@@ -313,7 +413,12 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
                     sortable: true,
                     resizable: true,
                     minWidth: 60
-                }, headerHeight: 64, rowHeight: 28, animateRows: false, suppressMovableColumns: false, readOnlyEdit: true, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, getRowId: (params) => { var _a, _b, _c; return String((_c = (_a = params.data.__row_index__) !== null && _a !== void 0 ? _a : (_b = params.node) === null || _b === void 0 ? void 0 : _b.rowIndex) !== null && _c !== void 0 ? _c : 0); }, loading: loading }))));
+                }, headerHeight: 64, rowHeight: 28, animateRows: false, suppressMovableColumns: false, readOnlyEdit: true, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, onRowDoubleClicked: isContainerView && onDrillDown ? (event) => {
+                    var _a, _b;
+                    const data = event.data;
+                    const key = String((_b = (_a = data === null || data === void 0 ? void 0 : data.index) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.key) !== null && _b !== void 0 ? _b : event.rowIndex);
+                    onDrillDown(key, `[${key}]`);
+                } : undefined, getRowId: (params) => { var _a, _b, _c; return String((_c = (_a = params.data.__row_index__) !== null && _a !== void 0 ? _a : (_b = params.node) === null || _b === void 0 ? void 0 : _b.rowIndex) !== null && _c !== void 0 ? _c : 0); }, loading: loading }))));
 };
 
 
@@ -927,7 +1032,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StatusBar__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./StatusBar */ "./lib/components/StatusBar.js");
 /* harmony import */ var _ResizeHandle__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./ResizeHandle */ "./lib/components/ResizeHandle.js");
 /* harmony import */ var _SqlPanel__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./SqlPanel */ "./lib/components/SqlPanel.js");
-/* harmony import */ var _utils_stylesheetCloner__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/stylesheetCloner */ "./lib/utils/stylesheetCloner.js");
+/* harmony import */ var _Breadcrumb__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./Breadcrumb */ "./lib/components/Breadcrumb.js");
+/* harmony import */ var _utils_stylesheetCloner__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../utils/stylesheetCloner */ "./lib/utils/stylesheetCloner.js");
+
 
 
 
@@ -951,6 +1058,7 @@ const VariableExplorerApp = ({ commManager }) => {
     const [showSidebar, setShowSidebar] = react__WEBPACK_IMPORTED_MODULE_0__.useState(true);
     const [loading, setLoading] = react__WEBPACK_IMPORTED_MODULE_0__.useState(false);
     const [hiddenColumns, setHiddenColumns] = react__WEBPACK_IMPORTED_MODULE_0__.useState(new Set());
+    const [navPath, setNavPath] = react__WEBPACK_IMPORTED_MODULE_0__.useState([]);
     const [activeTab, setActiveTab] = react__WEBPACK_IMPORTED_MODULE_0__.useState('data');
     const [sqlDocked, setSqlDocked] = react__WEBPACK_IMPORTED_MODULE_0__.useState(true);
     const [sqlDockHeight, setSqlDockHeight] = react__WEBPACK_IMPORTED_MODULE_0__.useState(300);
@@ -1024,8 +1132,8 @@ const VariableExplorerApp = ({ commManager }) => {
             commManager.messageReceived.disconnect(onMessage);
         };
     }, [commManager]);
-    const onSelectVariable = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((name, childKey) => {
-        setSelectedVar(name);
+    // Fetch data for a variable, optionally at a child path
+    const fetchData = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((name, childKey) => {
         setRows([]);
         setSortModel([]);
         setCellSelection(null);
@@ -1040,9 +1148,52 @@ const VariableExplorerApp = ({ commManager }) => {
         });
         commManager.send({
             type: 'get_stats',
-            variable: name
+            variable: name,
+            childKey
         });
     }, [commManager]);
+    const onSelectVariable = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((name) => {
+        setSelectedVar(name);
+        setNavPath([{ label: name }]);
+        fetchData(name);
+    }, [fetchData]);
+    // Drill into a child (e.g., double-click row in container summary)
+    const onDrillDown = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((childKey, childLabel) => {
+        if (!selectedVar)
+            return;
+        const newPath = [...navPath, { label: childLabel, childKey }];
+        setNavPath(newPath);
+        // Build the full child key chain for nested access
+        const fullChildKey = newPath.slice(1).map(p => p.childKey).filter(Boolean).join('.');
+        fetchData(selectedVar, fullChildKey || undefined);
+    }, [selectedVar, navPath, fetchData]);
+    // Navigate back to a specific depth in the breadcrumb
+    const onBreadcrumbNavigate = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((depth) => {
+        if (!selectedVar)
+            return;
+        const newPath = navPath.slice(0, depth + 1);
+        setNavPath(newPath);
+        if (newPath.length <= 1) {
+            // Back to root
+            fetchData(selectedVar);
+        }
+        else {
+            const fullChildKey = newPath.slice(1).map(p => p.childKey).filter(Boolean).join('.');
+            fetchData(selectedVar, fullChildKey || undefined);
+        }
+    }, [selectedVar, navPath, fetchData]);
+    // Check if current view is a container (showing summary, not actual data)
+    const isContainerView = react__WEBPACK_IMPORTED_MODULE_0__.useMemo(() => {
+        if (!selectedVar)
+            return false;
+        const varInfo = variables.find(v => v.name === selectedVar);
+        if (!varInfo)
+            return false;
+        // Only the root level of containers shows the summary
+        if (navPath.length > 1)
+            return false;
+        return varInfo.tabularKind === 'list_of_dataframes' || varInfo.tabularKind === 'dict_of_dataframes';
+    }, [selectedVar, variables, navPath]);
     const onLoadMore = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((startRow) => {
         if (selectedVar) {
             commManager.send({
@@ -1119,7 +1270,7 @@ const VariableExplorerApp = ({ commManager }) => {
 <style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}#ve-sql-root{width:100%;height:100%}</style>
 </head><body><div id="ve-sql-root"></div></body></html>`);
         doc.close();
-        (0,_utils_stylesheetCloner__WEBPACK_IMPORTED_MODULE_9__.cloneStylesheets)(document, doc);
+        (0,_utils_stylesheetCloner__WEBPACK_IMPORTED_MODULE_10__.cloneStylesheets)(document, doc);
         const parentBody = document.body;
         for (let i = 0; i < parentBody.attributes.length; i++) {
             const attr = parentBody.attributes[i];
@@ -1168,7 +1319,8 @@ const VariableExplorerApp = ({ commManager }) => {
                                 " (",
                                 selectedVarInfo.shape.map(s => s.toLocaleString()).join(' \u00d7 '),
                                 ")")))),
-                    selectedVar && columns.length > 0 ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_DataGrid__WEBPACK_IMPORTED_MODULE_3__.DataGrid, { rows: rows, columns: columns, columnStats: columnStats, totalRows: totalRows, sortModel: sortModel, hiddenColumns: hiddenColumns, loading: loading, onSortChanged: onSortChanged, onLoadMore: onLoadMore, onCellSelected: onCellSelected, onCellEdit: onCellEdit })) : (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-empty-state" }, loading ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-loading" },
+                    navPath.length > 1 && (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Breadcrumb__WEBPACK_IMPORTED_MODULE_9__.Breadcrumb, { path: navPath, onNavigate: onBreadcrumbNavigate })),
+                    selectedVar && columns.length > 0 ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_DataGrid__WEBPACK_IMPORTED_MODULE_3__.DataGrid, { rows: rows, columns: columns, columnStats: columnStats, totalRows: totalRows, sortModel: sortModel, hiddenColumns: hiddenColumns, loading: loading, isContainerView: isContainerView, onSortChanged: onSortChanged, onLoadMore: onLoadMore, onCellSelected: onCellSelected, onCellEdit: onCellEdit, onDrillDown: onDrillDown })) : (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-empty-state" }, loading ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-loading" },
                         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-spinner" }))) : !connected ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null,
                         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-empty-icon" }, "\uD83D\uDD0C"),
                         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, "Not connected to a kernel"),
@@ -1714,4 +1866,4 @@ function cloneStylesheets(source, target) {
 /***/ }
 
 }]);
-//# sourceMappingURL=lib_index_js.222181cf7e1bf20231e5.js.map
+//# sourceMappingURL=lib_index_js.eae18ac739a59d349dae.js.map

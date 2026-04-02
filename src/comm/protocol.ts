@@ -34,6 +34,7 @@ export interface IGetDataMsg {
 export interface IGetStatsMsg {
   type: 'get_stats';
   variable: string;
+  childKey?: string;
 }
 
 export interface IGetPropertiesMsg {

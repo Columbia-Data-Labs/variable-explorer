@@ -132,12 +132,22 @@ def _handle_get_stats(data: dict):
     """Get column statistics for a variable."""
     user_ns = _get_user_ns()
     var_name = data.get('variable', '')
+    child_key = data.get('childKey')
 
     if var_name not in user_ns:
         _send_error(f"Variable '{var_name}' not found", 'get_stats')
         return
 
-    result = compute_column_stats(var_name, user_ns[var_name])
+    obj = user_ns[var_name]
+    # Drill into child if requested
+    if child_key:
+        from .data_provider import _get_child
+        obj = _get_child(obj, child_key)
+        if obj is None:
+            _send_error(f"Child '{child_key}' not found", 'get_stats')
+            return
+
+    result = compute_column_stats(var_name, obj)
     _send(_active_comm, result)
 
 

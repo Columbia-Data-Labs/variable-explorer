@@ -24,7 +24,8 @@
       "Bash(node \"node_modules/@jupyterlab/builder/lib/build-labextension.js\" --core-path \"C:/Users/Owner/anaconda3/Lib/site-packages/jupyterlab/staging\" \".\" --development)",
       "Bash(twine upload:*)",
       "Bash(gh auth:*)",
-      "Bash(gh org:*)"
+      "Bash(gh org:*)",
+      "Bash(gh repo:*)"
     ]
   }
 }

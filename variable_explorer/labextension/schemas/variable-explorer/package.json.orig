@@ -1,6 +1,6 @@
 {
   "name": "variable-explorer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Spyder/Stata-grade variable explorer for JupyterLab",
   "keywords": [
     "jupyter",

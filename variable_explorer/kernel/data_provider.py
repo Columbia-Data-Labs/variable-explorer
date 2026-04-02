@@ -190,10 +190,13 @@ def _get_column_defs(df) -> list[dict]:
 
 
 def _serialize_rows(page, start_row: int) -> list[dict]:
-    """Serialize DataFrame rows to list of dicts."""
+    """Serialize DataFrame rows to list of dicts, preserving the real index."""
     rows = []
-    for idx, (_, row) in enumerate(page.iterrows()):
-        record: dict[str, Any] = {'__row_index__': start_row + idx}
+    for idx, (real_index, row) in enumerate(page.iterrows()):
+        record: dict[str, Any] = {
+            '__row_index__': start_row + idx,
+            '__pandas_index__': _serialize_value(real_index),
+        }
         for col, val in row.items():
             record[str(col)] = _serialize_value(val)
         rows.append(record)

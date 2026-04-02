@@ -710,7 +710,7 @@
               "singleton": true
             },
             "variable-explorer": {
-              "version": "0.1.0",
+              "version": "0.2.0",
               "singleton": true,
               "import": "Z:\\Consulting\\Projects\\variable_explorer\\lib\\index.js"
             }

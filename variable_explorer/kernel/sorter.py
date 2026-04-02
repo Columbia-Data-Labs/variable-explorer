@@ -9,13 +9,30 @@ def apply_sort(df: Any, sort_model: list[dict]) -> Any:
     """Apply multi-column sort to a DataFrame.
 
     sort_model: [{'colId': 'price', 'sort': 'asc'}, ...]
+    Special: colId '__index__' sorts by the DataFrame's index.
     Returns a new sorted DataFrame (does not modify the original).
     """
     if not sort_model:
         return df
 
-    cols = [s['colId'] for s in sort_model]
-    ascending = [s['sort'] == 'asc' for s in sort_model]
+    # Handle index sort
+    index_sorts = [s for s in sort_model if s['colId'] == '__index__']
+    col_sorts = [s for s in sort_model if s['colId'] != '__index__']
+
+    # If sorting by index
+    if index_sorts:
+        ascending = index_sorts[0]['sort'] == 'asc'
+        try:
+            return df.sort_index(ascending=ascending, na_position='last')
+        except Exception:
+            return df
+
+    # Regular column sort
+    if not col_sorts:
+        return df
+
+    cols = [s['colId'] for s in col_sorts]
+    ascending = [s['sort'] == 'asc' for s in col_sorts]
 
     # Validate columns exist
     valid_cols = []

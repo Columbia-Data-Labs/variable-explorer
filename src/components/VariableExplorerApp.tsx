@@ -16,6 +16,7 @@ import { CellReferenceBar } from './CellReferenceBar';
 import { StatusBar } from './StatusBar';
 import { ResizeHandle } from './ResizeHandle';
 import { SqlPanel } from './SqlPanel';
+import { Breadcrumb, BreadcrumbItem } from './Breadcrumb';
 import { cloneStylesheets } from '../utils/stylesheetCloner';
 
 interface Props {
@@ -42,6 +43,7 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
   const [showSidebar, setShowSidebar] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
   const [hiddenColumns, setHiddenColumns] = React.useState<Set<string>>(new Set());
+  const [navPath, setNavPath] = React.useState<BreadcrumbItem[]>([]);
   const [activeTab, setActiveTab] = React.useState<'data' | 'sql'>('data');
   const [sqlDocked, setSqlDocked] = React.useState(true);
   const [sqlDockHeight, setSqlDockHeight] = React.useState(300);
@@ -121,8 +123,8 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
     };
   }, [commManager]);
 
-  const onSelectVariable = React.useCallback((name: string, childKey?: string) => {
-    setSelectedVar(name);
+  // Fetch data for a variable, optionally at a child path
+  const fetchData = React.useCallback((name: string, childKey?: string) => {
     setRows([]);
     setSortModel([]);
     setCellSelection(null);
@@ -137,9 +139,50 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
     });
     commManager.send({
       type: 'get_stats',
-      variable: name
+      variable: name,
+      childKey
     });
   }, [commManager]);
+
+  const onSelectVariable = React.useCallback((name: string) => {
+    setSelectedVar(name);
+    setNavPath([{ label: name }]);
+    fetchData(name);
+  }, [fetchData]);
+
+  // Drill into a child (e.g., double-click row in container summary)
+  const onDrillDown = React.useCallback((childKey: string, childLabel: string) => {
+    if (!selectedVar) return;
+    const newPath = [...navPath, { label: childLabel, childKey }];
+    setNavPath(newPath);
+    // Build the full child key chain for nested access
+    const fullChildKey = newPath.slice(1).map(p => p.childKey).filter(Boolean).join('.');
+    fetchData(selectedVar, fullChildKey || undefined);
+  }, [selectedVar, navPath, fetchData]);
+
+  // Navigate back to a specific depth in the breadcrumb
+  const onBreadcrumbNavigate = React.useCallback((depth: number) => {
+    if (!selectedVar) return;
+    const newPath = navPath.slice(0, depth + 1);
+    setNavPath(newPath);
+    if (newPath.length <= 1) {
+      // Back to root
+      fetchData(selectedVar);
+    } else {
+      const fullChildKey = newPath.slice(1).map(p => p.childKey).filter(Boolean).join('.');
+      fetchData(selectedVar, fullChildKey || undefined);
+    }
+  }, [selectedVar, navPath, fetchData]);
+
+  // Check if current view is a container (showing summary, not actual data)
+  const isContainerView = React.useMemo(() => {
+    if (!selectedVar) return false;
+    const varInfo = variables.find(v => v.name === selectedVar);
+    if (!varInfo) return false;
+    // Only the root level of containers shows the summary
+    if (navPath.length > 1) return false;
+    return varInfo.tabularKind === 'list_of_dataframes' || varInfo.tabularKind === 'dict_of_dataframes';
+  }, [selectedVar, variables, navPath]);
 
   const onLoadMore = React.useCallback((startRow: number) => {
     if (selectedVar) {
@@ -321,6 +364,9 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
                 )}
               </span>
             </div>
+            {navPath.length > 1 && (
+              <Breadcrumb path={navPath} onNavigate={onBreadcrumbNavigate} />
+            )}
             {selectedVar && columns.length > 0 ? (
               <DataGrid
                 rows={rows}
@@ -330,10 +376,12 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
                 sortModel={sortModel}
                 hiddenColumns={hiddenColumns}
                 loading={loading}
+                isContainerView={isContainerView}
                 onSortChanged={onSortChanged}
                 onLoadMore={onLoadMore}
                 onCellSelected={onCellSelected}
                 onCellEdit={onCellEdit}
+                onDrillDown={onDrillDown}
               />
             ) : (
               <div className="ve-empty-state">

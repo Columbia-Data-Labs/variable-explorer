@@ -11,6 +11,54 @@ import { IColumnDef, IColumnStats, ISortItem } from '../comm/protocol';
 import { HistogramHeader } from './HistogramHeader';
 import { numericHeatmap, booleanColor } from '../utils/colorScales';
 
+const IndexHeader: React.FC<{
+  onIndexSort: (direction: 'asc' | 'desc' | null) => void;
+  sortModel: ISortItem[];
+}> = ({ onIndexSort, sortModel }) => {
+  // Check if there's an active index sort
+  const indexSort = sortModel.find(s => s.colId === '__index__');
+  const currentDir = indexSort?.sort || null;
+  // If other columns are sorted but not index, show no arrow
+  const hasOtherSorts = sortModel.some(s => s.colId !== '__index__');
+
+  const handleClick = () => {
+    if (currentDir === null || hasOtherSorts) {
+      // No index sort or other sorts active → go to ascending (original order, clear other sorts)
+      onIndexSort('asc');
+    } else if (currentDir === 'asc') {
+      onIndexSort('desc');
+    } else {
+      onIndexSort('asc');
+    }
+  };
+
+  const arrow = currentDir === 'asc' ? ' \u25b2' : currentDir === 'desc' ? ' \u25bc' : '';
+  const tooltip = currentDir === 'desc'
+    ? 'Click to sort index ascending (original order)'
+    : currentDir === 'asc'
+    ? 'Click to reverse index order'
+    : 'Click to reset to original index order';
+
+  return (
+    <div
+      onClick={handleClick}
+      title={tooltip}
+      style={{
+        cursor: 'pointer',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 600,
+        fontSize: '12px',
+      }}
+    >
+      Index{arrow}
+    </div>
+  );
+};
+
 interface Props {
   rows: Record<string, any>[];
   columns: IColumnDef[];
@@ -19,10 +67,12 @@ interface Props {
   sortModel: ISortItem[];
   hiddenColumns: Set<string>;
   loading: boolean;
+  isContainerView?: boolean;
   onSortChanged: (sortModel: ISortItem[]) => void;
   onLoadMore: (startRow: number) => void;
   onCellSelected: (rowIndex: number, colName: string, value: any) => void;
   onCellEdit: (rowIndex: number, column: string, newValue: string) => void;
+  onDrillDown?: (childKey: string, childLabel: string) => void;
 }
 
 export const DataGrid: React.FC<Props> = ({
@@ -33,10 +83,12 @@ export const DataGrid: React.FC<Props> = ({
   sortModel,
   hiddenColumns,
   loading,
+  isContainerView,
   onSortChanged,
   onLoadMore,
   onCellSelected,
-  onCellEdit
+  onCellEdit,
+  onDrillDown
 }) => {
   const gridRef = React.useRef<AgGridReact>(null);
 
@@ -53,15 +105,26 @@ export const DataGrid: React.FC<Props> = ({
   const colDefs: ColDef[] = React.useMemo(() => {
     // Row index column
     const indexCol: ColDef = {
-      headerName: '#',
+      headerName: 'Index',
       colId: '__index__',
-      valueGetter: (params: any) => {
-        return params.node?.rowIndex != null ? params.node.rowIndex : '';
+      field: '__pandas_index__',
+      headerComponent: IndexHeader,
+      headerComponentParams: {
+        sortModel,
+        onIndexSort: (direction: 'asc' | 'desc' | null) => {
+          // Clear AG Grid's visual sort state
+          gridRef.current?.api?.applyColumnState({ defaultState: { sort: null } });
+          if (direction) {
+            onSortChanged([{ colId: '__index__', sort: direction }]);
+          } else {
+            onSortChanged([]);
+          }
+        }
       },
-      width: 70,
+      width: 80,
       pinned: 'left',
-      sortable: true,
-      resizable: false,
+      sortable: false,
+      resizable: true,
       cellStyle: {
         color: 'var(--jp-ui-font-color2)',
         fontWeight: '500',
@@ -134,22 +197,35 @@ export const DataGrid: React.FC<Props> = ({
         return def;
       });
 
+    // Add a drill-down column for container views
+    if (isContainerView && onDrillDown) {
+      const drillCol: ColDef = {
+        headerName: '',
+        colId: '__drill__',
+        width: 50,
+        sortable: false,
+        resizable: false,
+        cellRenderer: () => {
+          return '\u25b6';
+        },
+        cellStyle: {
+          cursor: 'pointer',
+          textAlign: 'center',
+          fontSize: '14px',
+          color: 'var(--jp-brand-color1)',
+        }
+      };
+      return [indexCol, ...dataCols, drillCol];
+    }
+
     return [indexCol, ...dataCols];
-  }, [columns, statsMap, hiddenColumns]);
+  }, [columns, statsMap, hiddenColumns, isContainerView, onDrillDown, onSortChanged]);
 
   // Handle sort
   const handleSortChanged = React.useCallback((event: SortChangedEvent) => {
     const colState = event.api.getColumnState();
-    const sorted = colState.filter((c: any) => c.sort);
-
-    // If the index column (#) is being sorted, clear all sorts → reset to original order
-    if (sorted.some((c: any) => c.colId === '__index__')) {
-      event.api.applyColumnState({ defaultState: { sort: null } });
-      onSortChanged([]);
-      return;
-    }
-
-    const newSortModel: ISortItem[] = sorted
+    const newSortModel: ISortItem[] = colState
+      .filter((c: any) => c.sort && c.colId !== '__index__')
       .sort((a: any, b: any) => (a.sortIndex || 0) - (b.sortIndex || 0))
       .map((c: any) => ({
         colId: c.colId,
@@ -160,10 +236,19 @@ export const DataGrid: React.FC<Props> = ({
 
   // Handle cell click
   const handleCellClicked = React.useCallback((event: CellClickedEvent) => {
+    // Drill-down: clicking the ▶ column or double-clicking a row in container view
+    if (isContainerView && onDrillDown && event.colDef.colId === '__drill__') {
+      const data = event.data;
+      // Use 'index' or 'key' field from the summary row
+      const key = String(data?.index ?? data?.key ?? event.rowIndex);
+      const label = `[${key}]`;
+      onDrillDown(key, label);
+      return;
+    }
     if (event.colDef.field && event.rowIndex != null) {
       onCellSelected(event.rowIndex, event.colDef.field, event.value);
     }
-  }, [onCellSelected]);
+  }, [onCellSelected, isContainerView, onDrillDown]);
 
   // Handle cell edit
   const handleCellEditRequest = React.useCallback((event: CellEditRequestEvent) => {
@@ -211,6 +296,11 @@ export const DataGrid: React.FC<Props> = ({
           onCellClicked={handleCellClicked}
           onCellEditRequest={handleCellEditRequest}
           onBodyScrollEnd={handleBodyScrollEnd}
+          onRowDoubleClicked={isContainerView && onDrillDown ? (event: any) => {
+            const data = event.data;
+            const key = String(data?.index ?? data?.key ?? event.rowIndex);
+            onDrillDown(key, `[${key}]`);
+          } : undefined}
           getRowId={(params: any) => String(params.data.__row_index__ ?? params.node?.rowIndex ?? 0)}
           loading={loading}
         />
