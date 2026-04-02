@@ -1,0 +1,15 @@
+include LICENSE
+include README.md
+include install.json
+include package.json
+include tsconfig.json
+include .yarnrc.yml
+
+graft variable_explorer/labextension
+graft src
+graft style
+graft schema
+
+prune node_modules
+prune .yarn
+prune lib

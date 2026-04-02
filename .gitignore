@@ -1,0 +1,11 @@
+node_modules/
+lib/
+*.egg-info/
+dist/
+build/
+.yarn/
+*.tgz
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

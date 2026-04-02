@@ -1,0 +1,75 @@
+{
+  "jupyter.lab.setting-icon-label": "Variable Explorer",
+  "title": "Variable Explorer",
+  "description": "Variable Explorer settings.",
+  "jupyter.lab.toolbars": {
+    "Notebook": [
+      {
+        "name": "variable-explorer-open",
+        "command": "variable-explorer:open",
+        "rank": 50,
+        "label": "Variables"
+      }
+    ]
+  },
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "jp-mainmenu-view",
+        "items": [
+          {
+            "command": "variable-explorer:open",
+            "rank": 1
+          }
+        ]
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "toolbar": {
+      "title": "Notebook toolbar items",
+      "description": "Toolbar items for notebooks",
+      "items": {
+        "$ref": "#/definitions/toolbarItem"
+      },
+      "type": "array",
+      "default": []
+    },
+    "pageSize": {
+      "type": "number",
+      "title": "Page Size",
+      "description": "Number of rows to load per page in the data grid.",
+      "default": 1000
+    },
+    "maxHistogramBins": {
+      "type": "number",
+      "title": "Max Histogram Bins",
+      "description": "Maximum number of bins for column histograms.",
+      "default": 20
+    },
+    "enableConditionalFormatting": {
+      "type": "boolean",
+      "title": "Enable Conditional Formatting",
+      "description": "Enable heatmap coloring for numeric columns.",
+      "default": true
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "toolbarItem": {
+      "properties": {
+        "name": { "type": "string" },
+        "args": { "type": "object" },
+        "command": { "type": "string", "default": "" },
+        "disabled": { "type": "boolean", "default": false },
+        "icon": { "type": "string", "default": "" },
+        "label": { "type": "string", "default": "" },
+        "type": { "type": "string", "enum": ["command", "spacer"], "default": "command" },
+        "rank": { "type": "number", "default": 50 }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

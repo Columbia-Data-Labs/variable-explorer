@@ -1,0 +1,54 @@
+/* AG Grid theme overrides to match JupyterLab */
+
+.ag-theme-quartz,
+.ag-theme-quartz-dark {
+  --ag-background-color: var(--jp-layout-color0);
+  --ag-foreground-color: var(--jp-ui-font-color0);
+  --ag-header-background-color: var(--jp-layout-color1);
+  --ag-header-foreground-color: var(--jp-ui-font-color0);
+  --ag-border-color: var(--jp-border-color1);
+  --ag-row-hover-color: var(--jp-layout-color2);
+  --ag-selected-row-background-color: var(--jp-brand-color3);
+  --ag-range-selection-border-color: var(--jp-brand-color1);
+  --ag-font-family: var(--jp-ui-font-family);
+  --ag-font-size: var(--jp-ui-font-size1);
+  --ag-odd-row-background-color: var(--jp-layout-color0);
+  --ag-control-panel-background-color: var(--jp-layout-color1);
+  --ag-subheader-background-color: var(--jp-layout-color1);
+  --ag-invalid-color: var(--jp-error-color1);
+  --ag-input-focus-border-color: var(--jp-brand-color1);
+  --ag-cell-horizontal-padding: 8px;
+  --ag-header-height: 64px;
+  --ag-row-height: 28px;
+  --ag-grid-size: 4px;
+}
+
+/* Ensure the grid fills its container */
+.ve-grid-wrapper .ag-theme-quartz,
+.ve-grid-wrapper .ag-theme-quartz-dark {
+  width: 100%;
+  height: 100%;
+}
+
+/* Custom header with histogram */
+.ag-header-cell {
+  overflow: visible !important;
+}
+
+/* Nicer scrollbar styling */
+.ag-theme-quartz ::-webkit-scrollbar,
+.ag-theme-quartz-dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ag-theme-quartz ::-webkit-scrollbar-thumb,
+.ag-theme-quartz-dark ::-webkit-scrollbar-thumb {
+  background: var(--jp-border-color1);
+  border-radius: 4px;
+}
+
+.ag-theme-quartz ::-webkit-scrollbar-thumb:hover,
+.ag-theme-quartz-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--jp-border-color0);
+}

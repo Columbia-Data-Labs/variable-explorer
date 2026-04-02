@@ -1,0 +1,765 @@
+/* Variable Explorer - Core Styles */
+
+/* ============ SQL Panel ============ */
+
+.ve-sql-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ve-sql-no-duckdb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  color: var(--jp-ui-font-color0);
+}
+
+.ve-sql-top {
+  display: flex;
+  flex-shrink: 0;
+  height: 180px;
+  border-bottom: 1px solid var(--jp-border-color1);
+}
+
+.ve-sql-tables {
+  width: 160px;
+  min-width: 120px;
+  border-right: 1px solid var(--jp-border-color1);
+  display: flex;
+  flex-direction: column;
+  background: var(--jp-layout-color1);
+  overflow: hidden;
+}
+
+.ve-sql-tables-header {
+  padding: 6px 8px;
+  font-weight: 600;
+  font-size: var(--jp-ui-font-size1);
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.ve-sql-tables-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ve-sql-table-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: var(--jp-ui-font-size1);
+  border-bottom: 1px solid var(--jp-border-color2);
+  transition: background 0.1s;
+}
+
+.ve-sql-table-item:hover {
+  background: var(--jp-layout-color2);
+}
+
+.ve-sql-table-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-sql-table-meta {
+  font-size: 10px;
+  color: var(--jp-ui-font-color2);
+  white-space: nowrap;
+  margin-left: 4px;
+}
+
+.ve-sql-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ve-sql-textarea {
+  flex: 1;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-code-font-size);
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  box-sizing: border-box;
+}
+
+.ve-sql-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  background: var(--jp-layout-color1);
+  border-top: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.ve-sql-run-btn {
+  padding: 4px 14px;
+  border: 1px solid var(--jp-brand-color1);
+  border-radius: 3px;
+  background: var(--jp-brand-color1);
+  color: #fff;
+  font-size: var(--jp-ui-font-size1);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ve-sql-run-btn:hover:not(:disabled) {
+  background: var(--jp-brand-color0);
+}
+
+.ve-sql-run-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ve-sql-save-as {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color1);
+}
+
+.ve-sql-save-input {
+  padding: 2px 6px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-ui-font-size1);
+  width: 140px;
+  outline: none;
+}
+
+.ve-sql-save-input:focus {
+  border-color: var(--jp-brand-color1);
+}
+
+.ve-sql-results {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ve-sql-error {
+  padding: 8px 12px;
+  background: var(--jp-error-color3, #fde);
+  color: var(--jp-error-color1, #c00);
+  font-size: var(--jp-ui-font-size1);
+  border-bottom: 1px solid var(--jp-error-color1, #c00);
+  flex-shrink: 0;
+}
+
+.ve-sql-saved {
+  padding: 4px 12px;
+  background: var(--jp-success-color3, #dfd);
+  color: var(--jp-success-color1, #080);
+  font-size: var(--jp-ui-font-size1);
+  border-bottom: 1px solid var(--jp-success-color1, #080);
+  flex-shrink: 0;
+}
+
+.ve-sql-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color2);
+  padding: 20px;
+}
+
+.ve-sql-result-status {
+  padding: 3px 8px;
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  background: var(--jp-layout-color1);
+  border-top: 1px solid var(--jp-border-color1);
+  flex-shrink: 0;
+}
+
+/* ============ End SQL Panel ============ */
+
+/* Notebook toolbar button */
+.ve-toolbar-button-widget {
+  display: flex;
+  align-items: center;
+}
+.ve-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  margin: 0 4px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color0);
+  font-family: var(--jp-ui-font-family);
+  font-size: var(--jp-ui-font-size1);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 24px;
+  line-height: 1;
+}
+.ve-toolbar-btn:hover {
+  background: var(--jp-layout-color2);
+  border-color: var(--jp-brand-color1);
+}
+
+.ve-main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--jp-ui-font-family);
+  color: var(--jp-ui-font-color0);
+  background: var(--jp-layout-color0);
+}
+
+/* Tab Bar */
+.ve-tab-bar {
+  display: flex;
+  align-items: center;
+  background: var(--jp-layout-color1);
+  border-bottom: 1px solid var(--jp-border-color1);
+  flex-shrink: 0;
+  padding: 0 4px;
+  min-height: 32px;
+}
+
+.ve-tab {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  font-family: var(--jp-ui-font-family);
+}
+
+.ve-tab:hover {
+  color: var(--jp-ui-font-color0);
+  background: var(--jp-layout-color2);
+}
+
+.ve-tab-active {
+  color: var(--jp-brand-color1);
+  border-bottom-color: var(--jp-brand-color1);
+  font-weight: 600;
+}
+
+.ve-tab-spacer {
+  flex: 1;
+}
+
+.ve-tab-action {
+  padding: 3px 8px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  font-size: var(--jp-ui-font-size1);
+  cursor: pointer;
+  margin-left: 4px;
+  font-family: var(--jp-ui-font-family);
+}
+
+.ve-tab-action:hover {
+  background: var(--jp-layout-color2);
+}
+
+/* Cell Reference Bar */
+.ve-cell-reference-bar {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--jp-layout-color1);
+  border-bottom: 1px solid var(--jp-border-color1);
+  font-size: var(--jp-ui-font-size1);
+  min-height: 28px;
+  flex-shrink: 0;
+}
+
+.ve-cell-reference-bar .ve-cell-location {
+  font-weight: 600;
+  margin-right: 12px;
+  color: var(--jp-ui-font-color1);
+  white-space: nowrap;
+}
+
+.ve-cell-reference-bar .ve-cell-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--jp-ui-font-color0);
+}
+
+/* Content area (variable list + grid + sidebar) */
+.ve-content-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Resize handle */
+.ve-resize-handle {
+  width: 6px;
+  min-width: 6px;
+  cursor: col-resize;
+  background: var(--jp-border-color1);
+  flex-shrink: 0;
+  align-self: stretch;
+  transition: background 0.15s;
+  position: relative;
+  z-index: 10;
+}
+.ve-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+}
+.ve-resize-handle:hover,
+.ve-resize-handle:active {
+  background: var(--jp-brand-color1);
+}
+
+.ve-resize-handle-horizontal {
+  height: 6px;
+  min-height: 6px;
+  cursor: row-resize;
+  background: var(--jp-border-color1);
+  flex-shrink: 0;
+  transition: background 0.15s;
+  position: relative;
+}
+.ve-resize-handle-horizontal::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -4px;
+  bottom: -4px;
+}
+.ve-resize-handle-horizontal:hover,
+.ve-resize-handle-horizontal:active {
+  background: var(--jp-brand-color1);
+}
+
+/* Variable List (left panel) */
+.ve-variable-list {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--jp-layout-color1);
+  overflow: hidden;
+}
+
+.ve-variable-list-header {
+  padding: 8px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.ve-variable-search {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  font-size: var(--jp-ui-font-size1);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ve-variable-search:focus {
+  border-color: var(--jp-brand-color1);
+}
+
+.ve-variable-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.ve-variable-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--jp-border-color2);
+  transition: background 0.1s;
+}
+
+.ve-variable-item:hover {
+  background: var(--jp-layout-color2);
+}
+
+.ve-variable-item.ve-selected {
+  background: var(--jp-brand-color3);
+  border-left: 3px solid var(--jp-brand-color1);
+}
+
+.ve-variable-item .ve-var-name {
+  font-weight: 600;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color0);
+}
+
+.ve-variable-item .ve-var-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+}
+
+.ve-type-badge {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ve-type-badge.ve-type-dataframe {
+  background: var(--jp-brand-color3);
+  color: var(--jp-brand-color1);
+}
+
+.ve-type-badge.ve-type-series {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.ve-type-badge.ve-type-ndarray {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.ve-type-badge.ve-type-list {
+  background: #e8eaf6;
+  color: #283593;
+}
+
+.ve-type-badge.ve-type-dict {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.ve-type-badge.ve-type-other {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color2);
+}
+
+.ve-kind-label {
+  display: inline-block;
+  font-size: 9px;
+  color: var(--jp-ui-font-color2);
+  font-style: italic;
+}
+
+/* Data Grid (center) */
+.ve-grid-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ve-grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--jp-layout-color1);
+  border-bottom: 1px solid var(--jp-border-color1);
+  flex-shrink: 0;
+}
+
+.ve-grid-toolbar button {
+  padding: 4px 8px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  font-size: var(--jp-ui-font-size1);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.ve-grid-toolbar button:hover {
+  background: var(--jp-layout-color2);
+}
+
+.ve-grid-toolbar .ve-toolbar-title {
+  font-weight: 600;
+  font-size: var(--jp-ui-font-size1);
+  margin-right: auto;
+}
+
+.ve-grid-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Metadata Sidebar (right panel) */
+.ve-metadata-sidebar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--jp-layout-color1);
+  overflow: hidden;
+}
+
+.ve-metadata-header {
+  padding: 8px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  font-weight: 600;
+  font-size: var(--jp-ui-font-size1);
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ve-metadata-search {
+  width: 100%;
+  padding: 4px 8px;
+  margin: 4px 8px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color0);
+  font-size: var(--jp-ui-font-size1);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ve-metadata-columns {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.ve-metadata-column-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: var(--jp-ui-font-size1);
+  border-bottom: 1px solid var(--jp-border-color2);
+}
+
+.ve-metadata-column-item input[type="checkbox"] {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.ve-metadata-column-item .ve-col-name {
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-metadata-column-item .ve-col-type {
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.ve-metadata-column-item .ve-col-format {
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  margin-left: 8px;
+  white-space: nowrap;
+  font-family: var(--jp-code-font-family);
+}
+
+/* Properties panel */
+.ve-properties-panel {
+  padding: 8px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.ve-properties-panel h4 {
+  margin: 0 0 4px 0;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color1);
+}
+
+.ve-properties-table {
+  width: 100%;
+  font-size: var(--jp-ui-font-size0);
+  border-collapse: collapse;
+}
+
+.ve-properties-table td {
+  padding: 2px 4px;
+  vertical-align: top;
+}
+
+.ve-properties-table td:first-child {
+  font-weight: 500;
+  color: var(--jp-ui-font-color1);
+  white-space: nowrap;
+  width: 90px;
+}
+
+.ve-properties-table td:last-child {
+  color: var(--jp-ui-font-color0);
+  word-break: break-all;
+}
+
+/* Status Bar */
+.ve-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 3px 8px;
+  background: var(--jp-layout-color1);
+  border-top: 1px solid var(--jp-border-color1);
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  flex-shrink: 0;
+  min-height: 22px;
+}
+
+.ve-status-bar .ve-status-item {
+  white-space: nowrap;
+}
+
+.ve-status-bar .ve-status-separator {
+  color: var(--jp-border-color1);
+}
+
+/* Histogram Header */
+.ve-histogram-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  padding: 2px 0;
+}
+
+.ve-histogram-header .ve-header-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.ve-histogram-header .ve-header-label .ve-sort-icon {
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+.ve-histogram-header canvas {
+  width: 100%;
+  height: 30px;
+  margin-top: 2px;
+}
+
+/* Histogram tooltip */
+.ve-histogram-tooltip {
+  position: fixed;
+  background: var(--jp-layout-color0);
+  border: 1px solid var(--jp-border-color0);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 1.4;
+  color: var(--jp-ui-font-color0);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 99999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Empty state */
+.ve-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--jp-ui-font-color2);
+  font-size: var(--jp-ui-font-size1);
+  text-align: center;
+  padding: 20px;
+}
+
+.ve-empty-state .ve-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+/* Loading spinner */
+.ve-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.ve-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--jp-border-color1);
+  border-top: 3px solid var(--jp-brand-color1);
+  border-radius: 50%;
+  animation: ve-spin 0.8s linear infinite;
+}
+
+@keyframes ve-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

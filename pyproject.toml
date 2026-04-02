@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version>=0.3.2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "variable-explorer"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "Framework :: Jupyter :: JupyterLab :: Extensions",
+    "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "jupyterlab>=4.0.0,<5",
+    "pandas",
+    "numpy",
+]
+dynamic = ["version", "description"]
+
+[project.optional-dependencies]
+sql = ["duckdb>=0.9"]
+
+[project.urls]
+Homepage = "https://github.com/variable-explorer/variable-explorer"
+
+[tool.hatch.version]
+source = "nodejs"
+
+[tool.hatch.metadata.hooks.nodejs]
+fields = ["description", "version"]
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["variable_explorer/labextension"]
+exclude = [".github", "binder", "node_modules", ".yarn", "*.tgz"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"variable_explorer/labextension" = "share/jupyter/labextensions/variable-explorer"
+"install.json" = "share/jupyter/labextensions/variable-explorer/install.json"
+
+[tool.hatch.build.hooks.version]
+path = "variable_explorer/_version.py"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder>=0.5"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "variable_explorer/labextension/static/style.js",
+    "variable_explorer/labextension/package.json",
+]
+skip-if-exists = ["variable_explorer/labextension/static/style.js"]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+build_cmd = "build:prod"
+npm = ["jlpm"]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "install:extension"
+npm = ["jlpm"]
+source_dir = "src"
+build_dir = "variable_explorer/labextension"

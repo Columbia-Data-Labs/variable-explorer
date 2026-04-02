@@ -1,0 +1,5 @@
+{
+  "packageManager": "python",
+  "packageName": "variable_explorer",
+  "uninstallInstructions": "pip uninstall variable_explorer"
+}

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(npm --version)",
+      "Bash(pip list:*)",
+      "Bash(python:*)",
+      "Bash(xargs ls:*)",
+      "Bash(jupyter labextension:*)",
+      "Bash(node -e \"console.log\\(require.resolve\\('@jupyterlab/services'\\)\\)\")",
+      "Bash(npm view:*)",
+      "Bash(npm list:*)",
+      "Bash(npm pack:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pip install:*)",
+      "Bash(jlpm install:*)",
+      "Bash(jlpm build:lib)",
+      "Bash(node -e \"const s = require\\('@jupyterlab/services'\\); console.log\\(Object.keys\\(s\\).filter\\(k => k.includes\\('Kernel'\\)\\).join\\(', '\\)\\)\")",
+      "Bash(jlpm build:labextension:dev)",
+      "Bash(mkdir -p Projects/ve_build)",
+      "Bash(cp -r \"Z:/Consulting/Projects/variable_explorer/\"* \"C:/Users/Owner/Projects/ve_build/\")",
+      "Bash(cp \"Z:/Consulting/Projects/variable_explorer/.yarnrc.yml\" \"C:/Users/Owner/Projects/ve_build/\")",
+      "Bash(cmd.exe:*)",
+      "Bash(node \"node_modules/@jupyterlab/builder/lib/build-labextension.js\" --core-path \"C:/Users/Owner/anaconda3/Lib/site-packages/jupyterlab/staging\" \".\" --development)",
+      "Bash(twine upload:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh org:*)"
+    ]
+  }
+}
