@@ -334,25 +334,22 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
             }
             return def;
         });
-        // Add a drill-down column for container views
+        // In container views, add ▶ icon to the 'type' column
         if (isContainerView && onDrillDown) {
-            const drillCol = {
-                headerName: '',
-                colId: '__drill__',
-                width: 50,
-                sortable: false,
-                resizable: false,
-                cellRenderer: () => {
-                    return '\u25b6';
-                },
-                cellStyle: {
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    fontSize: '14px',
-                    color: 'var(--jp-brand-color1)',
+            for (const col of dataCols) {
+                if (col.field === 'type') {
+                    col.cellRenderer = (params) => {
+                        if (!params.value)
+                            return '';
+                        return `\u25b6 ${params.value}`;
+                    };
+                    col.cellStyle = {
+                        cursor: 'pointer',
+                        color: 'var(--jp-brand-color1)',
+                        fontWeight: '600',
+                    };
                 }
-            };
-            return [indexCol, ...dataCols, drillCol];
+            }
         }
         return [indexCol, ...dataCols];
     }, [columns, statsMap, hiddenColumns, isContainerView, onDrillDown, onSortChanged]);
@@ -371,15 +368,14 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
     // Handle cell click
     const handleCellClicked = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((event) => {
         var _a, _b;
-        // Drill-down: clicking the ▶ column or double-clicking a row in container view
-        if (isContainerView && onDrillDown && event.colDef.colId === '__drill__') {
+        // Container view: any click drills down
+        if (isContainerView && onDrillDown) {
             const data = event.data;
-            // Use 'index' or 'key' field from the summary row
             const key = String((_b = (_a = data === null || data === void 0 ? void 0 : data.index) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.key) !== null && _b !== void 0 ? _b : event.rowIndex);
-            const label = `[${key}]`;
-            onDrillDown(key, label);
+            onDrillDown(key, `[${key}]`);
             return;
         }
+        // Normal view: update cell reference bar
         if (event.colDef.field && event.rowIndex != null) {
             onCellSelected(event.rowIndex, event.colDef.field, event.value);
         }
@@ -413,7 +409,7 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
                     sortable: true,
                     resizable: true,
                     minWidth: 60
-                }, headerHeight: 64, rowHeight: 28, animateRows: false, suppressMovableColumns: false, readOnlyEdit: true, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, onRowDoubleClicked: isContainerView && onDrillDown ? (event) => {
+                }, headerHeight: 64, rowHeight: isContainerView ? 36 : 28, animateRows: false, suppressMovableColumns: false, readOnlyEdit: !isContainerView, rowClass: isContainerView ? 've-drillable-row' : undefined, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: isContainerView ? undefined : handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, onRowDoubleClicked: isContainerView && onDrillDown ? (event) => {
                     var _a, _b;
                     const data = event.data;
                     const key = String((_b = (_a = data === null || data === void 0 ? void 0 : data.index) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.key) !== null && _b !== void 0 ? _b : event.rowIndex);
@@ -1192,7 +1188,11 @@ const VariableExplorerApp = ({ commManager }) => {
         // Only the root level of containers shows the summary
         if (navPath.length > 1)
             return false;
-        return varInfo.tabularKind === 'list_of_dataframes' || varInfo.tabularKind === 'dict_of_dataframes';
+        const drillableKinds = [
+            'list_of_dataframes', 'dict_of_dataframes',
+            'dict_mixed', 'dict_of_dicts'
+        ];
+        return drillableKinds.includes(varInfo.tabularKind);
     }, [selectedVar, variables, navPath]);
     const onLoadMore = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((startRow) => {
         if (selectedVar) {
@@ -1866,4 +1866,4 @@ function cloneStylesheets(source, target) {
 /***/ }
 
 }]);
-//# sourceMappingURL=lib_index_js.eae18ac739a59d349dae.js.map
+//# sourceMappingURL=lib_index_js.97d4618546f1c587b0b9.js.map

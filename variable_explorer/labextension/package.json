@@ -1,6 +1,6 @@
 {
   "name": "variable-explorer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A Spyder/Stata-grade variable explorer for JupyterLab",
   "keywords": [
     "jupyter",
@@ -88,7 +88,7 @@
       }
     },
     "_build": {
-      "load": "static\\remoteEntry.f6ed84861d018fdf1bb4.js",
+      "load": "static\\remoteEntry.0ffaa28e442db7f70245.js",
       "extension": "./extension",
       "style": "./style"
     }

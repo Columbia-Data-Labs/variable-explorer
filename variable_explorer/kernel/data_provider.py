@@ -61,15 +61,26 @@ def get_data_page(
 
 
 def _get_child(obj: Any, key: str) -> Any:
-    """Access a child element from a container."""
-    if isinstance(obj, dict):
-        return obj.get(key)
-    if isinstance(obj, (list, tuple)):
-        try:
-            return obj[int(key)]
-        except (ValueError, IndexError):
+    """Access a child element from a container.
+
+    Supports dot-separated paths for nested access: "user.contact.phone"
+    """
+    # Handle dot-separated paths for nested drill-down
+    parts = key.split('.')
+    current = obj
+    for part in parts:
+        if current is None:
             return None
-    return None
+        if isinstance(current, dict):
+            current = current.get(part)
+        elif isinstance(current, (list, tuple)):
+            try:
+                current = current[int(part)]
+            except (ValueError, IndexError):
+                return None
+        else:
+            return None
+    return current
 
 
 def _to_dataframe(obj: Any):
@@ -122,15 +133,28 @@ def _to_dataframe(obj: Any):
                     })
                 return pd.DataFrame(rows)
 
-            # Dict with scalar values → single-row or key-value table
-            try:
-                return pd.DataFrame([obj])
-            except Exception:
-                return pd.DataFrame({
-                    'key': [str(k) for k in obj.keys()],
-                    'value': [str(v) for v in obj.values()],
-                    'type': [type(v).__name__ for v in obj.values()]
-                })
+            # Generic dict → key/value/type summary (supports drill-down)
+            rows = []
+            for k, v in obj.items():
+                preview = repr(v)
+                if len(preview) > 100:
+                    preview = preview[:100] + '...'
+                row = {
+                    'key': str(k),
+                    'type': type(v).__name__,
+                    'value': preview,
+                }
+                # Add size info for containers
+                if isinstance(v, dict):
+                    row['size'] = f'{len(v)} keys'
+                elif isinstance(v, (list, tuple)):
+                    row['size'] = f'{len(v)} items'
+                elif isinstance(v, pd.DataFrame):
+                    row['size'] = f'{v.shape[0]} x {v.shape[1]}'
+                else:
+                    row['size'] = ''
+                rows.append(row)
+            return pd.DataFrame(rows)
 
         # List types
         if isinstance(obj, (list, tuple)):

@@ -35,6 +35,14 @@
   overflow: visible !important;
 }
 
+/* Drillable rows in container views */
+.ve-drillable-row {
+  cursor: pointer !important;
+}
+.ve-drillable-row:hover .ag-cell {
+  background: var(--jp-brand-color3) !important;
+}
+
 /* Nicer scrollbar styling */
 .ag-theme-quartz ::-webkit-scrollbar,
 .ag-theme-quartz-dark ::-webkit-scrollbar {

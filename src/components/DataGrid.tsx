@@ -197,25 +197,21 @@ export const DataGrid: React.FC<Props> = ({
         return def;
       });
 
-    // Add a drill-down column for container views
+    // In container views, add ▶ icon to the 'type' column
     if (isContainerView && onDrillDown) {
-      const drillCol: ColDef = {
-        headerName: '',
-        colId: '__drill__',
-        width: 50,
-        sortable: false,
-        resizable: false,
-        cellRenderer: () => {
-          return '\u25b6';
-        },
-        cellStyle: {
-          cursor: 'pointer',
-          textAlign: 'center',
-          fontSize: '14px',
-          color: 'var(--jp-brand-color1)',
+      for (const col of dataCols) {
+        if (col.field === 'type') {
+          col.cellRenderer = (params: any) => {
+            if (!params.value) return '';
+            return `\u25b6 ${params.value}`;
+          };
+          col.cellStyle = {
+            cursor: 'pointer',
+            color: 'var(--jp-brand-color1)',
+            fontWeight: '600',
+          };
         }
-      };
-      return [indexCol, ...dataCols, drillCol];
+      }
     }
 
     return [indexCol, ...dataCols];
@@ -236,15 +232,14 @@ export const DataGrid: React.FC<Props> = ({
 
   // Handle cell click
   const handleCellClicked = React.useCallback((event: CellClickedEvent) => {
-    // Drill-down: clicking the ▶ column or double-clicking a row in container view
-    if (isContainerView && onDrillDown && event.colDef.colId === '__drill__') {
+    // Container view: any click drills down
+    if (isContainerView && onDrillDown) {
       const data = event.data;
-      // Use 'index' or 'key' field from the summary row
       const key = String(data?.index ?? data?.key ?? event.rowIndex);
-      const label = `[${key}]`;
-      onDrillDown(key, label);
+      onDrillDown(key, `[${key}]`);
       return;
     }
+    // Normal view: update cell reference bar
     if (event.colDef.field && event.rowIndex != null) {
       onCellSelected(event.rowIndex, event.colDef.field, event.value);
     }
@@ -288,13 +283,14 @@ export const DataGrid: React.FC<Props> = ({
             minWidth: 60
           }}
           headerHeight={64}
-          rowHeight={28}
+          rowHeight={isContainerView ? 36 : 28}
           animateRows={false}
           suppressMovableColumns={false}
-          readOnlyEdit={true}
+          readOnlyEdit={!isContainerView}
+          rowClass={isContainerView ? 've-drillable-row' : undefined}
           onSortChanged={handleSortChanged}
           onCellClicked={handleCellClicked}
-          onCellEditRequest={handleCellEditRequest}
+          onCellEditRequest={isContainerView ? undefined : handleCellEditRequest}
           onBodyScrollEnd={handleBodyScrollEnd}
           onRowDoubleClicked={isContainerView && onDrillDown ? (event: any) => {
             const data = event.data;

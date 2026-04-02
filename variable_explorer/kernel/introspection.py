@@ -95,7 +95,13 @@ def _classify_tabular(obj: Any) -> dict:
         if all(isinstance(v, dict) for v in values):
             return {'isTabular': True, 'kind': 'dict_of_dicts'}
 
-        # Generic dict with scalar values → single-row tabular
+        # Generic dict with mixed types → drillable key/value table
+        # Check if any values are containers (dicts, lists, DataFrames)
+        has_containers = any(isinstance(v, (dict, list, tuple)) for v in values)
+        if has_containers:
+            return {'isTabular': True, 'kind': 'dict_mixed', 'childCount': len(values)}
+
+        # Dict with only scalar values
         return {'isTabular': True, 'kind': 'dict_scalar'}
 
     if isinstance(obj, (list, tuple)):

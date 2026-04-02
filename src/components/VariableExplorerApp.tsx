@@ -181,7 +181,11 @@ export const VariableExplorerApp: React.FC<Props> = ({ commManager }) => {
     if (!varInfo) return false;
     // Only the root level of containers shows the summary
     if (navPath.length > 1) return false;
-    return varInfo.tabularKind === 'list_of_dataframes' || varInfo.tabularKind === 'dict_of_dataframes';
+    const drillableKinds = [
+      'list_of_dataframes', 'dict_of_dataframes',
+      'dict_mixed', 'dict_of_dicts'
+    ];
+    return drillableKinds.includes(varInfo.tabularKind);
   }, [selectedVar, variables, navPath]);
 
   const onLoadMore = React.useCallback((startRow: number) => {
