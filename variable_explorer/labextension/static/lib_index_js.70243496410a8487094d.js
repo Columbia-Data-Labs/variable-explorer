@@ -230,6 +230,8 @@ const IndexHeader = ({ onIndexSort, sortModel }) => {
 };
 const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColumns, loading, isContainerView, onSortChanged, onLoadMore, onCellSelected, onCellEdit, onDrillDown }) => {
     const gridRef = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
+    const gridWrapperRef = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
+    const selectionRef = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
     // Build a stats lookup map
     const statsMap = react__WEBPACK_IMPORTED_MODULE_0__.useMemo(() => {
         const map = {};
@@ -400,21 +402,178 @@ const DataGrid = ({ rows, columns, columnStats, totalRows, sortModel, hiddenColu
             onLoadMore(rows.length);
         }
     }, [loading, rows.length, totalRows, onLoadMore]);
+    // --- Range selection (Excel-like) ---
+    const getColFields = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        var _a, _b;
+        const api = (_a = gridRef.current) === null || _a === void 0 ? void 0 : _a.api;
+        if (!api)
+            return [];
+        const allCols = ((_b = api.getAllDisplayedColumns) === null || _b === void 0 ? void 0 : _b.call(api)) || [];
+        return allCols.map((c) => c.getColId()).filter((id) => id !== '__index__');
+    }, []);
+    const clearSelectionHighlight = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        const wrapper = gridWrapperRef.current;
+        if (!wrapper)
+            return;
+        wrapper.querySelectorAll('.ve-cell-selected').forEach(el => el.classList.remove('ve-cell-selected'));
+    }, []);
+    const applySelectionHighlight = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        const sel = selectionRef.current;
+        const wrapper = gridWrapperRef.current;
+        if (!sel || !wrapper)
+            return;
+        clearSelectionHighlight();
+        const minRow = Math.min(sel.startRow, sel.endRow);
+        const maxRow = Math.max(sel.startRow, sel.endRow);
+        const minCol = Math.min(sel.startColIdx, sel.endColIdx);
+        const maxCol = Math.max(sel.startColIdx, sel.endColIdx);
+        const allRows = wrapper.querySelectorAll('.ag-row');
+        allRows.forEach((rowEl) => {
+            const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+            if (rowIdx < minRow || rowIdx > maxRow)
+                return;
+            const cells = rowEl.querySelectorAll('.ag-cell');
+            cells.forEach((cellEl) => {
+                const colId = cellEl.getAttribute('col-id');
+                if (!colId || colId === '__index__')
+                    return;
+                const colIdx = sel.colFields.indexOf(colId);
+                if (colIdx >= minCol && colIdx <= maxCol) {
+                    cellEl.classList.add('ve-cell-selected');
+                }
+            });
+        });
+    }, [clearSelectionHighlight]);
+    const handleGridMouseDown = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((e) => {
+        if (isContainerView)
+            return;
+        if (e.button !== 0)
+            return; // Left click only
+        const cellEl = e.target.closest('.ag-cell');
+        const rowEl = e.target.closest('.ag-row');
+        if (!cellEl || !rowEl)
+            return;
+        const colId = cellEl.getAttribute('col-id');
+        const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+        if (!colId || colId === '__index__' || rowIdx < 0)
+            return;
+        const colFields = getColFields();
+        const colIdx = colFields.indexOf(colId);
+        if (colIdx < 0)
+            return;
+        selectionRef.current = {
+            startRow: rowIdx, startColIdx: colIdx,
+            endRow: rowIdx, endColIdx: colIdx,
+            dragging: true, colFields
+        };
+        applySelectionHighlight();
+    }, [isContainerView, getColFields, applySelectionHighlight]);
+    const handleGridMouseMove = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((e) => {
+        const sel = selectionRef.current;
+        if (!sel || !sel.dragging)
+            return;
+        const cellEl = e.target.closest('.ag-cell');
+        const rowEl = e.target.closest('.ag-row');
+        if (!cellEl || !rowEl)
+            return;
+        const colId = cellEl.getAttribute('col-id');
+        const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+        if (!colId || colId === '__index__' || rowIdx < 0)
+            return;
+        const colIdx = sel.colFields.indexOf(colId);
+        if (colIdx < 0)
+            return;
+        sel.endRow = rowIdx;
+        sel.endColIdx = colIdx;
+        applySelectionHighlight();
+    }, [applySelectionHighlight]);
+    const handleGridMouseUp = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        if (selectionRef.current) {
+            selectionRef.current.dragging = false;
+        }
+    }, []);
+    // Copy selected range as TSV
+    const copySelection = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        var _a, _b, _c;
+        const sel = selectionRef.current;
+        if (!sel)
+            return;
+        const doc = ((_a = gridWrapperRef.current) === null || _a === void 0 ? void 0 : _a.ownerDocument) || document;
+        const minRow = Math.min(sel.startRow, sel.endRow);
+        const maxRow = Math.max(sel.startRow, sel.endRow);
+        const minCol = Math.min(sel.startColIdx, sel.endColIdx);
+        const maxCol = Math.max(sel.startColIdx, sel.endColIdx);
+        const selectedFields = sel.colFields.slice(minCol, maxCol + 1);
+        const lines = [];
+        for (let r = minRow; r <= maxRow; r++) {
+            if (r < rows.length) {
+                lines.push(selectedFields.map(f => {
+                    const v = rows[r][f];
+                    return v == null ? '' : String(v);
+                }).join('\t'));
+            }
+        }
+        const tsv = lines.join('\n');
+        if (tsv && ((_c = (_b = doc.defaultView) === null || _b === void 0 ? void 0 : _b.navigator) === null || _c === void 0 ? void 0 : _c.clipboard)) {
+            doc.defaultView.navigator.clipboard.writeText(tsv);
+        }
+    }, [rows]);
+    // Ctrl+C: copy selected range
+    react__WEBPACK_IMPORTED_MODULE_0__.useEffect(() => {
+        const wrapper = gridWrapperRef.current;
+        if (!wrapper)
+            return;
+        const doc = wrapper.ownerDocument || document;
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                if (selectionRef.current) {
+                    e.preventDefault();
+                    copySelection();
+                }
+            }
+        };
+        doc.addEventListener('keydown', handleKeyDown);
+        return () => doc.removeEventListener('keydown', handleKeyDown);
+    }, [copySelection]);
+    // Right-click context menu
+    const [contextMenu, setContextMenu] = react__WEBPACK_IMPORTED_MODULE_0__.useState(null);
+    const handleContextMenu = react__WEBPACK_IMPORTED_MODULE_0__.useCallback((e) => {
+        if (!selectionRef.current)
+            return;
+        e.preventDefault();
+        setContextMenu({ x: e.clientX, y: e.clientY });
+    }, []);
+    // Close context menu on any click
+    react__WEBPACK_IMPORTED_MODULE_0__.useEffect(() => {
+        var _a;
+        if (!contextMenu)
+            return;
+        const doc = ((_a = gridWrapperRef.current) === null || _a === void 0 ? void 0 : _a.ownerDocument) || document;
+        const close = () => setContextMenu(null);
+        doc.addEventListener('mousedown', close);
+        return () => doc.removeEventListener('mousedown', close);
+    }, [contextMenu]);
     // Detect JupyterLab dark theme
     const isDark = document.body.getAttribute('data-jp-theme-light') === 'false';
     const themeClass = isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz';
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-grid-wrapper" },
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-grid-wrapper", ref: gridWrapperRef, onMouseDown: handleGridMouseDown, onMouseMove: handleGridMouseMove, onMouseUp: handleGridMouseUp, onContextMenu: handleContextMenu },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: themeClass, style: { width: '100%', height: '100%' } },
             react__WEBPACK_IMPORTED_MODULE_0__.createElement(ag_grid_react__WEBPACK_IMPORTED_MODULE_1__.AgGridReact, { ref: gridRef, rowData: rows, columnDefs: colDefs, defaultColDef: {
                     sortable: true,
                     resizable: true,
                     minWidth: 60
-                }, headerHeight: 64, rowHeight: isContainerView ? 36 : 28, animateRows: false, suppressMovableColumns: false, readOnlyEdit: !isContainerView, rowClass: isContainerView ? 've-drillable-row' : undefined, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: isContainerView ? undefined : handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, onRowDoubleClicked: isContainerView && onDrillDown ? (event) => {
+                }, headerHeight: 64, rowHeight: isContainerView ? 36 : 28, animateRows: false, suppressMovableColumns: false, suppressCellFocus: false, readOnlyEdit: !isContainerView, rowClass: isContainerView ? 've-drillable-row' : undefined, onSortChanged: handleSortChanged, onCellClicked: handleCellClicked, onCellEditRequest: isContainerView ? undefined : handleCellEditRequest, onBodyScrollEnd: handleBodyScrollEnd, onRowDoubleClicked: isContainerView && onDrillDown ? (event) => {
                     var _a, _b;
                     const data = event.data;
                     const key = String((_b = (_a = data === null || data === void 0 ? void 0 : data.index) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.key) !== null && _b !== void 0 ? _b : event.rowIndex);
                     onDrillDown(key, `[${key}]`);
-                } : undefined, getRowId: (params) => { var _a, _b, _c; return String((_c = (_a = params.data.__row_index__) !== null && _a !== void 0 ? _a : (_b = params.node) === null || _b === void 0 ? void 0 : _b.rowIndex) !== null && _c !== void 0 ? _c : 0); }, loading: loading }))));
+                } : undefined, getRowId: (params) => { var _a, _b, _c; return String((_c = (_a = params.data.__row_index__) !== null && _a !== void 0 ? _a : (_b = params.node) === null || _b === void 0 ? void 0 : _b.rowIndex) !== null && _c !== void 0 ? _c : 0); }, loading: loading })),
+        contextMenu && (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-context-menu", style: { left: contextMenu.x, top: contextMenu.y } },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-context-menu-item", onMouseDown: (e) => {
+                    e.stopPropagation();
+                    copySelection();
+                    setContextMenu(null);
+                } }, "Copy")))));
 };
 
 
@@ -886,6 +1045,22 @@ const SqlPanel = ({ commManager, onPopOut, isDocked, onToggleDock }) => {
         };
         input.click();
     }, []);
+    // Copy results to clipboard as TSV
+    const copyResults = react__WEBPACK_IMPORTED_MODULE_0__.useCallback(() => {
+        var _a, _b, _c;
+        if (resultColumns.length === 0 || resultRows.length === 0)
+            return;
+        const headers = resultColumns.map(c => c.name).join('\t');
+        const rowLines = resultRows.map(row => resultColumns.map(c => {
+            const val = row[c.name];
+            return val == null ? '' : String(val);
+        }).join('\t'));
+        const tsv = [headers, ...rowLines].join('\n');
+        const doc = ((_a = textareaRef.current) === null || _a === void 0 ? void 0 : _a.ownerDocument) || document;
+        if ((_c = (_b = doc.defaultView) === null || _b === void 0 ? void 0 : _b.navigator) === null || _c === void 0 ? void 0 : _c.clipboard) {
+            doc.defaultView.navigator.clipboard.writeText(tsv);
+        }
+    }, [resultColumns, resultRows]);
     // Build AG Grid column defs for results
     const colDefs = react__WEBPACK_IMPORTED_MODULE_0__.useMemo(() => {
         const indexCol = {
@@ -956,7 +1131,7 @@ const SqlPanel = ({ commManager, onPopOut, isDocked, onToggleDock }) => {
                 totalRows.toLocaleString(),
                 " rows)")),
             resultRows.length > 0 ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: themeClass, style: { width: '100%', height: '100%' } },
-                react__WEBPACK_IMPORTED_MODULE_0__.createElement(ag_grid_react__WEBPACK_IMPORTED_MODULE_1__.AgGridReact, { rowData: resultRows, columnDefs: colDefs, headerHeight: 32, rowHeight: 28, animateRows: false, defaultColDef: { sortable: true, resizable: true, minWidth: 60 } }))) : !error && (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-sql-placeholder" }, running ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-loading" },
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement(ag_grid_react__WEBPACK_IMPORTED_MODULE_1__.AgGridReact, { rowData: resultRows, columnDefs: colDefs, headerHeight: 32, rowHeight: 28, animateRows: false, enableCellTextSelection: true, ensureDomOrder: true, defaultColDef: { sortable: true, resizable: true, minWidth: 60 } }))) : !error && (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-sql-placeholder" }, running ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-loading" },
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "ve-spinner" }))) : (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { style: { opacity: 0.5 } },
                 "Write a SQL query and press Ctrl+Enter to run it.",
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("br", null),
@@ -1866,4 +2041,4 @@ function cloneStylesheets(source, target) {
 /***/ }
 
 }]);
-//# sourceMappingURL=lib_index_js.97d4618546f1c587b0b9.js.map
+//# sourceMappingURL=lib_index_js.70243496410a8487094d.js.map

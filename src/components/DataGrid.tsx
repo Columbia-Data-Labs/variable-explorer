@@ -91,6 +91,13 @@ export const DataGrid: React.FC<Props> = ({
   onDrillDown
 }) => {
   const gridRef = React.useRef<AgGridReact>(null);
+  const gridWrapperRef = React.useRef<HTMLDivElement>(null);
+  const selectionRef = React.useRef<{
+    startRow: number; startColIdx: number;
+    endRow: number; endColIdx: number;
+    dragging: boolean;
+    colFields: string[];
+  } | null>(null);
 
   // Build a stats lookup map
   const statsMap = React.useMemo(() => {
@@ -266,12 +273,170 @@ export const DataGrid: React.FC<Props> = ({
     }
   }, [loading, rows.length, totalRows, onLoadMore]);
 
+  // --- Range selection (Excel-like) ---
+  const getColFields = React.useCallback((): string[] => {
+    const api = gridRef.current?.api;
+    if (!api) return [];
+    const allCols = api.getAllDisplayedColumns?.() || [];
+    return allCols.map((c: any) => c.getColId()).filter((id: string) => id !== '__index__');
+  }, []);
+
+  const clearSelectionHighlight = React.useCallback(() => {
+    const wrapper = gridWrapperRef.current;
+    if (!wrapper) return;
+    wrapper.querySelectorAll('.ve-cell-selected').forEach(el => el.classList.remove('ve-cell-selected'));
+  }, []);
+
+  const applySelectionHighlight = React.useCallback(() => {
+    const sel = selectionRef.current;
+    const wrapper = gridWrapperRef.current;
+    if (!sel || !wrapper) return;
+
+    clearSelectionHighlight();
+
+    const minRow = Math.min(sel.startRow, sel.endRow);
+    const maxRow = Math.max(sel.startRow, sel.endRow);
+    const minCol = Math.min(sel.startColIdx, sel.endColIdx);
+    const maxCol = Math.max(sel.startColIdx, sel.endColIdx);
+
+    const allRows = wrapper.querySelectorAll('.ag-row');
+    allRows.forEach((rowEl: Element) => {
+      const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+      if (rowIdx < minRow || rowIdx > maxRow) return;
+      const cells = rowEl.querySelectorAll('.ag-cell');
+      cells.forEach((cellEl: Element) => {
+        const colId = cellEl.getAttribute('col-id');
+        if (!colId || colId === '__index__') return;
+        const colIdx = sel.colFields.indexOf(colId);
+        if (colIdx >= minCol && colIdx <= maxCol) {
+          cellEl.classList.add('ve-cell-selected');
+        }
+      });
+    });
+  }, [clearSelectionHighlight]);
+
+  const handleGridMouseDown = React.useCallback((e: React.MouseEvent) => {
+    if (isContainerView) return;
+    if (e.button !== 0) return; // Left click only
+    const cellEl = (e.target as HTMLElement).closest('.ag-cell');
+    const rowEl = (e.target as HTMLElement).closest('.ag-row');
+    if (!cellEl || !rowEl) return;
+
+    const colId = cellEl.getAttribute('col-id');
+    const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+    if (!colId || colId === '__index__' || rowIdx < 0) return;
+
+    const colFields = getColFields();
+    const colIdx = colFields.indexOf(colId);
+    if (colIdx < 0) return;
+
+    selectionRef.current = {
+      startRow: rowIdx, startColIdx: colIdx,
+      endRow: rowIdx, endColIdx: colIdx,
+      dragging: true, colFields
+    };
+    applySelectionHighlight();
+  }, [isContainerView, getColFields, applySelectionHighlight]);
+
+  const handleGridMouseMove = React.useCallback((e: React.MouseEvent) => {
+    const sel = selectionRef.current;
+    if (!sel || !sel.dragging) return;
+
+    const cellEl = (e.target as HTMLElement).closest('.ag-cell');
+    const rowEl = (e.target as HTMLElement).closest('.ag-row');
+    if (!cellEl || !rowEl) return;
+
+    const colId = cellEl.getAttribute('col-id');
+    const rowIdx = parseInt(rowEl.getAttribute('row-index') || '-1');
+    if (!colId || colId === '__index__' || rowIdx < 0) return;
+
+    const colIdx = sel.colFields.indexOf(colId);
+    if (colIdx < 0) return;
+
+    sel.endRow = rowIdx;
+    sel.endColIdx = colIdx;
+    applySelectionHighlight();
+  }, [applySelectionHighlight]);
+
+  const handleGridMouseUp = React.useCallback(() => {
+    if (selectionRef.current) {
+      selectionRef.current.dragging = false;
+    }
+  }, []);
+
+  // Copy selected range as TSV
+  const copySelection = React.useCallback(() => {
+    const sel = selectionRef.current;
+    if (!sel) return;
+    const doc = gridWrapperRef.current?.ownerDocument || document;
+    const minRow = Math.min(sel.startRow, sel.endRow);
+    const maxRow = Math.max(sel.startRow, sel.endRow);
+    const minCol = Math.min(sel.startColIdx, sel.endColIdx);
+    const maxCol = Math.max(sel.startColIdx, sel.endColIdx);
+    const selectedFields = sel.colFields.slice(minCol, maxCol + 1);
+    const lines: string[] = [];
+    for (let r = minRow; r <= maxRow; r++) {
+      if (r < rows.length) {
+        lines.push(selectedFields.map(f => {
+          const v = rows[r][f];
+          return v == null ? '' : String(v);
+        }).join('\t'));
+      }
+    }
+    const tsv = lines.join('\n');
+    if (tsv && doc.defaultView?.navigator?.clipboard) {
+      doc.defaultView.navigator.clipboard.writeText(tsv);
+    }
+  }, [rows]);
+
+  // Ctrl+C: copy selected range
+  React.useEffect(() => {
+    const wrapper = gridWrapperRef.current;
+    if (!wrapper) return;
+    const doc = wrapper.ownerDocument || document;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        if (selectionRef.current) {
+          e.preventDefault();
+          copySelection();
+        }
+      }
+    };
+    doc.addEventListener('keydown', handleKeyDown);
+    return () => doc.removeEventListener('keydown', handleKeyDown);
+  }, [copySelection]);
+
+  // Right-click context menu
+  const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number } | null>(null);
+
+  const handleContextMenu = React.useCallback((e: React.MouseEvent) => {
+    if (!selectionRef.current) return;
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  // Close context menu on any click
+  React.useEffect(() => {
+    if (!contextMenu) return;
+    const doc = gridWrapperRef.current?.ownerDocument || document;
+    const close = () => setContextMenu(null);
+    doc.addEventListener('mousedown', close);
+    return () => doc.removeEventListener('mousedown', close);
+  }, [contextMenu]);
+
   // Detect JupyterLab dark theme
   const isDark = document.body.getAttribute('data-jp-theme-light') === 'false';
   const themeClass = isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz';
 
   return (
-    <div className="ve-grid-wrapper">
+    <div
+      className="ve-grid-wrapper"
+      ref={gridWrapperRef}
+      onMouseDown={handleGridMouseDown}
+      onMouseMove={handleGridMouseMove}
+      onMouseUp={handleGridMouseUp}
+      onContextMenu={handleContextMenu}
+    >
       <div className={themeClass} style={{ width: '100%', height: '100%' }}>
         <AgGridReact
           ref={gridRef}
@@ -286,6 +451,7 @@ export const DataGrid: React.FC<Props> = ({
           rowHeight={isContainerView ? 36 : 28}
           animateRows={false}
           suppressMovableColumns={false}
+          suppressCellFocus={false}
           readOnlyEdit={!isContainerView}
           rowClass={isContainerView ? 've-drillable-row' : undefined}
           onSortChanged={handleSortChanged}
@@ -301,6 +467,23 @@ export const DataGrid: React.FC<Props> = ({
           loading={loading}
         />
       </div>
+      {contextMenu && (
+        <div
+          className="ve-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <div
+            className="ve-context-menu-item"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              copySelection();
+              setContextMenu(null);
+            }}
+          >
+            Copy
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -84,6 +84,42 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/* AG Grid theme overrides to match Ju
   background: var(--jp-brand-color3) !important;
 }
 
+/* Range selection highlight */
+.ve-cell-selected {
+  background: rgba(25, 118, 210, 0.25) !important;
+  outline: none;
+}
+
+/* Prevent text selection during drag */
+.ve-grid-wrapper {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Context menu */
+.ve-context-menu {
+  position: fixed;
+  background: var(--jp-layout-color0);
+  border: 1px solid var(--jp-border-color0);
+  border-radius: 4px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  z-index: 99999;
+  padding: 4px 0;
+  min-width: 120px;
+}
+
+.ve-context-menu-item {
+  padding: 6px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--jp-ui-font-color0);
+  font-family: var(--jp-ui-font-family);
+}
+
+.ve-context-menu-item:hover {
+  background: var(--jp-brand-color3);
+}
+
 /* Nicer scrollbar styling */
 .ag-theme-quartz ::-webkit-scrollbar,
 .ag-theme-quartz-dark ::-webkit-scrollbar {
@@ -101,7 +137,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/* AG Grid theme overrides to match Ju
 .ag-theme-quartz-dark ::-webkit-scrollbar-thumb:hover {
   background: var(--jp-border-color0);
 }
-`, "",{"version":3,"sources":["webpack://./style/ag-grid-overrides.css"],"names":[],"mappings":"AAAA,gDAAgD;;AAEhD;;EAEE,8CAA8C;EAC9C,+CAA+C;EAC/C,qDAAqD;EACrD,sDAAsD;EACtD,0CAA0C;EAC1C,6CAA6C;EAC7C,0DAA0D;EAC1D,yDAAyD;EACzD,0CAA0C;EAC1C,uCAAuC;EACvC,sDAAsD;EACtD,4DAA4D;EAC5D,wDAAwD;EACxD,0CAA0C;EAC1C,qDAAqD;EACrD,iCAAiC;EACjC,wBAAwB;EACxB,qBAAqB;EACrB,mBAAmB;AACrB;;AAEA,wCAAwC;AACxC;;EAEE,WAAW;EACX,YAAY;AACd;;AAEA,iCAAiC;AACjC;EACE,4BAA4B;AAC9B;;AAEA,sCAAsC;AACtC;EACE,0BAA0B;AAC5B;AACA;EACE,6CAA6C;AAC/C;;AAEA,4BAA4B;AAC5B;;EAEE,UAAU;EACV,WAAW;AACb;;AAEA;;EAEE,mCAAmC;EACnC,kBAAkB;AACpB;;AAEA;;EAEE,mCAAmC;AACrC","sourcesContent":["/* AG Grid theme overrides to match JupyterLab */\n\n.ag-theme-quartz,\n.ag-theme-quartz-dark {\n  --ag-background-color: var(--jp-layout-color0);\n  --ag-foreground-color: var(--jp-ui-font-color0);\n  --ag-header-background-color: var(--jp-layout-color1);\n  --ag-header-foreground-color: var(--jp-ui-font-color0);\n  --ag-border-color: var(--jp-border-color1);\n  --ag-row-hover-color: var(--jp-layout-color2);\n  --ag-selected-row-background-color: var(--jp-brand-color3);\n  --ag-range-selection-border-color: var(--jp-brand-color1);\n  --ag-font-family: var(--jp-ui-font-family);\n  --ag-font-size: var(--jp-ui-font-size1);\n  --ag-odd-row-background-color: var(--jp-layout-color0);\n  --ag-control-panel-background-color: var(--jp-layout-color1);\n  --ag-subheader-background-color: var(--jp-layout-color1);\n  --ag-invalid-color: var(--jp-error-color1);\n  --ag-input-focus-border-color: var(--jp-brand-color1);\n  --ag-cell-horizontal-padding: 8px;\n  --ag-header-height: 64px;\n  --ag-row-height: 28px;\n  --ag-grid-size: 4px;\n}\n\n/* Ensure the grid fills its container */\n.ve-grid-wrapper .ag-theme-quartz,\n.ve-grid-wrapper .ag-theme-quartz-dark {\n  width: 100%;\n  height: 100%;\n}\n\n/* Custom header with histogram */\n.ag-header-cell {\n  overflow: visible !important;\n}\n\n/* Drillable rows in container views */\n.ve-drillable-row {\n  cursor: pointer !important;\n}\n.ve-drillable-row:hover .ag-cell {\n  background: var(--jp-brand-color3) !important;\n}\n\n/* Nicer scrollbar styling */\n.ag-theme-quartz ::-webkit-scrollbar,\n.ag-theme-quartz-dark ::-webkit-scrollbar {\n  width: 8px;\n  height: 8px;\n}\n\n.ag-theme-quartz ::-webkit-scrollbar-thumb,\n.ag-theme-quartz-dark ::-webkit-scrollbar-thumb {\n  background: var(--jp-border-color1);\n  border-radius: 4px;\n}\n\n.ag-theme-quartz ::-webkit-scrollbar-thumb:hover,\n.ag-theme-quartz-dark ::-webkit-scrollbar-thumb:hover {\n  background: var(--jp-border-color0);\n}\n"],"sourceRoot":""}]);
+`, "",{"version":3,"sources":["webpack://./style/ag-grid-overrides.css"],"names":[],"mappings":"AAAA,gDAAgD;;AAEhD;;EAEE,8CAA8C;EAC9C,+CAA+C;EAC/C,qDAAqD;EACrD,sDAAsD;EACtD,0CAA0C;EAC1C,6CAA6C;EAC7C,0DAA0D;EAC1D,yDAAyD;EACzD,0CAA0C;EAC1C,uCAAuC;EACvC,sDAAsD;EACtD,4DAA4D;EAC5D,wDAAwD;EACxD,0CAA0C;EAC1C,qDAAqD;EACrD,iCAAiC;EACjC,wBAAwB;EACxB,qBAAqB;EACrB,mBAAmB;AACrB;;AAEA,wCAAwC;AACxC;;EAEE,WAAW;EACX,YAAY;AACd;;AAEA,iCAAiC;AACjC;EACE,4BAA4B;AAC9B;;AAEA,sCAAsC;AACtC;EACE,0BAA0B;AAC5B;AACA;EACE,6CAA6C;AAC/C;;AAEA,8BAA8B;AAC9B;EACE,+CAA+C;EAC/C,aAAa;AACf;;AAEA,uCAAuC;AACvC;EACE,iBAAiB;EACjB,yBAAyB;AAC3B;;AAEA,iBAAiB;AACjB;EACE,eAAe;EACf,mCAAmC;EACnC,yCAAyC;EACzC,kBAAkB;EAClB,sCAAsC;EACtC,cAAc;EACd,cAAc;EACd,gBAAgB;AAClB;;AAEA;EACE,iBAAiB;EACjB,eAAe;EACf,eAAe;EACf,+BAA+B;EAC/B,qCAAqC;AACvC;;AAEA;EACE,kCAAkC;AACpC;;AAEA,4BAA4B;AAC5B;;EAEE,UAAU;EACV,WAAW;AACb;;AAEA;;EAEE,mCAAmC;EACnC,kBAAkB;AACpB;;AAEA;;EAEE,mCAAmC;AACrC","sourcesContent":["/* AG Grid theme overrides to match JupyterLab */\n\n.ag-theme-quartz,\n.ag-theme-quartz-dark {\n  --ag-background-color: var(--jp-layout-color0);\n  --ag-foreground-color: var(--jp-ui-font-color0);\n  --ag-header-background-color: var(--jp-layout-color1);\n  --ag-header-foreground-color: var(--jp-ui-font-color0);\n  --ag-border-color: var(--jp-border-color1);\n  --ag-row-hover-color: var(--jp-layout-color2);\n  --ag-selected-row-background-color: var(--jp-brand-color3);\n  --ag-range-selection-border-color: var(--jp-brand-color1);\n  --ag-font-family: var(--jp-ui-font-family);\n  --ag-font-size: var(--jp-ui-font-size1);\n  --ag-odd-row-background-color: var(--jp-layout-color0);\n  --ag-control-panel-background-color: var(--jp-layout-color1);\n  --ag-subheader-background-color: var(--jp-layout-color1);\n  --ag-invalid-color: var(--jp-error-color1);\n  --ag-input-focus-border-color: var(--jp-brand-color1);\n  --ag-cell-horizontal-padding: 8px;\n  --ag-header-height: 64px;\n  --ag-row-height: 28px;\n  --ag-grid-size: 4px;\n}\n\n/* Ensure the grid fills its container */\n.ve-grid-wrapper .ag-theme-quartz,\n.ve-grid-wrapper .ag-theme-quartz-dark {\n  width: 100%;\n  height: 100%;\n}\n\n/* Custom header with histogram */\n.ag-header-cell {\n  overflow: visible !important;\n}\n\n/* Drillable rows in container views */\n.ve-drillable-row {\n  cursor: pointer !important;\n}\n.ve-drillable-row:hover .ag-cell {\n  background: var(--jp-brand-color3) !important;\n}\n\n/* Range selection highlight */\n.ve-cell-selected {\n  background: rgba(25, 118, 210, 0.25) !important;\n  outline: none;\n}\n\n/* Prevent text selection during drag */\n.ve-grid-wrapper {\n  user-select: none;\n  -webkit-user-select: none;\n}\n\n/* Context menu */\n.ve-context-menu {\n  position: fixed;\n  background: var(--jp-layout-color0);\n  border: 1px solid var(--jp-border-color0);\n  border-radius: 4px;\n  box-shadow: 0 3px 12px rgba(0,0,0,0.2);\n  z-index: 99999;\n  padding: 4px 0;\n  min-width: 120px;\n}\n\n.ve-context-menu-item {\n  padding: 6px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  color: var(--jp-ui-font-color0);\n  font-family: var(--jp-ui-font-family);\n}\n\n.ve-context-menu-item:hover {\n  background: var(--jp-brand-color3);\n}\n\n/* Nicer scrollbar styling */\n.ag-theme-quartz ::-webkit-scrollbar,\n.ag-theme-quartz-dark ::-webkit-scrollbar {\n  width: 8px;\n  height: 8px;\n}\n\n.ag-theme-quartz ::-webkit-scrollbar-thumb,\n.ag-theme-quartz-dark ::-webkit-scrollbar-thumb {\n  background: var(--jp-border-color1);\n  border-radius: 4px;\n}\n\n.ag-theme-quartz ::-webkit-scrollbar-thumb:hover,\n.ag-theme-quartz-dark ::-webkit-scrollbar-thumb:hover {\n  background: var(--jp-border-color0);\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -1081,4 +1117,4 @@ module.exports = "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/sv
 /***/ }
 
 }]);
-//# sourceMappingURL=style_index_js-data_font_woff2_charset_utf-8_base64_d09GMgABAAAAABmsAAsAAAAANbQAABlcAAEAAAAAA-5c9677.08d402b8f511f9f54a70.js.map
+//# sourceMappingURL=style_index_js-data_font_woff2_charset_utf-8_base64_d09GMgABAAAAABmsAAsAAAAANbQAABlcAAEAAAAAA-5c9677.6875f8669d8888400d18.js.map

@@ -132,6 +132,23 @@ export const SqlPanel: React.FC<Props> = ({ commManager, onPopOut, isDocked, onT
     input.click();
   }, []);
 
+  // Copy results to clipboard as TSV
+  const copyResults = React.useCallback(() => {
+    if (resultColumns.length === 0 || resultRows.length === 0) return;
+    const headers = resultColumns.map(c => c.name).join('\t');
+    const rowLines = resultRows.map(row =>
+      resultColumns.map(c => {
+        const val = row[c.name];
+        return val == null ? '' : String(val);
+      }).join('\t')
+    );
+    const tsv = [headers, ...rowLines].join('\n');
+    const doc = textareaRef.current?.ownerDocument || document;
+    if (doc.defaultView?.navigator?.clipboard) {
+      doc.defaultView.navigator.clipboard.writeText(tsv);
+    }
+  }, [resultColumns, resultRows]);
+
   // Build AG Grid column defs for results
   const colDefs: ColDef[] = React.useMemo(() => {
     const indexCol: ColDef = {
@@ -288,6 +305,8 @@ export const SqlPanel: React.FC<Props> = ({ commManager, onPopOut, isDocked, onT
               headerHeight={32}
               rowHeight={28}
               animateRows={false}
+              enableCellTextSelection={true}
+              ensureDomOrder={true}
               defaultColDef={{ sortable: true, resizable: true, minWidth: 60 }}
             />
           </div>
